@@ -54,6 +54,7 @@ local ModelTransparency = 1  -- weapon transparency
 local HandTransparency  = 1  -- hands transparency
 
 local AIMBOT = false
+local AimbotAccuracy = 100
 
 local SPEEDOMETER = false
 
@@ -140,6 +141,18 @@ CheatsTab:CreateToggle({
     Flag = "AimEnabled",
     Callback = function(value)
         AIMBOT = value
+    end
+})
+
+CheatsTab:CreateSlider({
+    Name = "Aimbot Accuracy",
+    Range = {0, 100},
+    Increment = 1,
+    Suffix = "%",
+    CurrentValue = 100,
+    Flag = "AimbotAccuracy",
+    Callback = function(value)
+        AimbotAccuracy = value
     end
 })
 
@@ -556,16 +569,13 @@ local Players = game:GetService('Players')
 local TweenService = game:GetService('TweenService')
 local RunService = game:GetService('RunService')
 local currentTarget = nil
-
 local Client = {}
 local maxAttempts = 10
 local attemptCount = 0
 local successs = false
-
 while attemptCount < maxAttempts and not successs do
     attemptCount = attemptCount + 1
     successs = true
-
     for _, v in next, getgc(true) do
         if type(v) == 'table' then
             if rawget(v, 'Fire') and type(rawget(v, 'Fire')) == 'function' and not Client.Bullet then
@@ -574,7 +584,6 @@ while attemptCount < maxAttempts and not successs do
                 local successUpvalue, players = pcall(function()
                     return debug.getupvalue(rawget(v, 'new'), 9)
                 end)
-
                 if successUpvalue and players then
                     Client.Players = players
                 else
@@ -583,35 +592,28 @@ while attemptCount < maxAttempts and not successs do
             end
         end
     end
-
     if not Client.Bullet or not Client.Players then
         wait(0.5)
     end
 end
-
 if not successs then
     print("Failed to attach client after " .. maxAttempts .. " attempts.")
     sendNotification("Failed to attach client after " .. maxAttempts .. " attempts, try rejoin game and try again", 8)
 else
     print("Client successfully attached")
     sendNotification("Client was successfully attached", 8)
-
 end
-
-
 function Client:GetPlayerHitbox(player, hitbox)
-	for _, player_hitbox in next, player.Hitboxes do
-		if (player_hitbox._name == hitbox) then
-			return player_hitbox
-		end
-	end
+    for _, player_hitbox in next, player.Hitboxes do
+        if (player_hitbox._name == hitbox) then
+            return player_hitbox
+        end
+    end
 end
-
 function Client:GetClosestPlayerFromScreen()
     local nearest_player, min_combined_score = nil, math.huge
     local camera_position = Camera.CFrame.Position
     local cursor_position = UserInputService:GetMouseLocation()
-
     for _, player in next, Client.Players do
         local model = player.PlayerModel and player.PlayerModel.Model
         if model and model.Head.Transparency ~= 1 then
@@ -619,9 +621,7 @@ function Client:GetClosestPlayerFromScreen()
             if is_visible then
                 local distance_to_camera = (player.Position - camera_position).Magnitude
                 local distance_to_cursor = (cursor_position - Vector2.new(screen_pos.X, screen_pos.Y)).Magnitude
-
                 local combined_score = distance_to_camera * 0.7 + distance_to_cursor * 0.3
-
                 if combined_score < min_combined_score then
                     min_combined_score = combined_score
                     nearest_player = player
@@ -629,36 +629,32 @@ function Client:GetClosestPlayerFromScreen()
             end
         end
     end
-
     return nearest_player
 end
-
 local last_hitbox = nil
-
+-- body hitboxes used when accuracy check fails
+local bodyHitboxes = {"Torso", "LeftArm", "RightArm", "LeftLeg", "RightLeg"}
 function Client:GetTargetHitbox(target)
-    if last_hitbox and last_hitbox.Parent == target.PlayerModel.Model then
-        return last_hitbox
-    end
-
-    for _, hitbox in next, {"Head", "Torso", "LeftArm", "RightArm", "LeftLeg", "RightLeg"} do
-        local player_hitbox = Client:GetPlayerHitbox(target, hitbox)
-        if player_hitbox then
-            last_hitbox = player_hitbox
-            return player_hitbox
+    if math.random(1, 100) <= AimbotAccuracy then
+        local headHitbox = Client:GetPlayerHitbox(target, "Head")
+        if headHitbox then
+            last_hitbox = headHitbox
+            return headHitbox
         end
     end
-
+    local torsoHitbox = Client:GetPlayerHitbox(target, "UpperTorso")
+    if torsoHitbox then
+        last_hitbox = torsoHitbox
+        return torsoHitbox
+    end
     last_hitbox = nil
     return nil
 end
-
 Fire = hookfunction(Client.Bullet.Fire, function(self, ...)
     local args = {...}
-
     if AIMBOT then
         local target = Client:GetClosestPlayerFromScreen()
         local targetHitbox = target and Client:GetTargetHitbox(target)
-
         if targetHitbox and target.Health > 0 then
             args[2] = (targetHitbox.CFrame.Position - Camera.CFrame.Position).Unit
             currentTarget = target
@@ -669,7 +665,6 @@ Fire = hookfunction(Client.Bullet.Fire, function(self, ...)
     else
         return Fire(self, ...)
     end
-
     return Fire(self, unpack(args))
 end)
 
