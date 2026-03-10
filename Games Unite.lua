@@ -47,7 +47,7 @@ end
 applyReplacement()
 
 local ESP_ENABLED = false
-local ESP_COLOR = Color3.fromRGB(255, 180, 80) -- default esp color
+local ESP_COLOR = Color3.fromRGB(255, 255, 255) -- default esp color
 local RGBESP = false
 
 local ModelTransparency = 1  -- weapon transparency
@@ -98,7 +98,7 @@ Window.ModifyTheme({
 
     TabBackground = Color3.fromRGB(80, 80, 80),
     TabStroke = Color3.fromRGB(85, 85, 85),
-    TabBackgroundSelected = Color3.fromRGB(255, 180, 80), -- selected tab
+    TabBackgroundSelected = Color3.fromRGB(255, 255, 255), -- selected tab
     TabTextColor = Color3.fromRGB(240, 240, 240),
     SelectedTabTextColor = Color3.fromRGB(25, 25, 25),
 
@@ -108,12 +108,12 @@ Window.ModifyTheme({
     ElementStroke = Color3.fromRGB(50, 50, 50),
     SecondaryElementStroke = Color3.fromRGB(40, 40, 40),
             
-    SliderBackground = Color3.fromRGB(255, 180, 80),
-    SliderProgress = Color3.fromRGB(255, 180, 80),
+    SliderBackground = Color3.fromRGB(140, 140, 140),
+    SliderProgress = Color3.fromRGB(160, 160, 160),
     SliderStroke = Color3.fromRGB(25, 25, 25),
 
     ToggleBackground = Color3.fromRGB(30, 30, 30),
-    ToggleEnabled = Color3.fromRGB(255, 180, 80), -- interior
+    ToggleEnabled = Color3.fromRGB(255, 255, 255), -- interior
     ToggleDisabled = Color3.fromRGB(100, 100, 100),
     ToggleEnabledStroke = Color3.fromRGB(25, 25, 25), -- outline
     ToggleDisabledStroke = Color3.fromRGB(125, 125, 125),
@@ -312,7 +312,7 @@ SkinTab:CreateSlider({
     end
 })
 
-_G.SOLID_KNIFE_COLOR = Color3.fromRGB(255, 180, 80)
+_G.SOLID_KNIFE_COLOR = Color3.fromRGB(255, 255, 255)
 _G.SOLID_KNIFE_MATERIAL = Enum.Material.Neon 
 
 local function applySolidKnife()
@@ -345,7 +345,7 @@ end
 
 SkinTab:CreateColorPicker({
     Name = "Knife Color",
-    Color = Color3.fromRGB(255, 180, 80),
+    Color = Color3.fromRGB(255, 255, 255),
     Flag = "SolidKnifeColor",
     Callback = function(color)
         _G.SOLID_KNIFE_COLOR = color
