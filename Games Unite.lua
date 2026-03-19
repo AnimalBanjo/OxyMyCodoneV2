@@ -46,6 +46,36 @@ end
 
 applyReplacement()
 
+-- golden gun
+local GGUN = false
+local coltsaa = WeaponFolder:FindFirstChild("coltsaa")
+local ggun = WeaponFolder:FindFirstChild("gg_goldengun")
+
+if not coltsaa or not ggun then
+    return
+end
+
+    -- Store original revolver
+local originalColtsaa = coltsaa:Clone()
+
+local function applyGunReplacement()
+    local current = WeaponFolder:FindFirstChild("coltsaa")
+    if current then
+        current:Destroy()
+    end
+    
+    if GGUN then
+        local replacement = ggun:Clone()
+        replacement.Name = "coltsaa"
+        replacement.Parent = WeaponFolder
+    else
+        local original = originalColtsaa:Clone()
+        original.Parent = WeaponFolder
+    end
+end
+
+applyGunReplacement()
+
 local ESP_ENABLED = false
 local ESP_COLOR = Color3.fromRGB(255, 255, 255) -- default esp color
 local RGBESP = false
@@ -276,6 +306,89 @@ VisualTab:CreateToggle({
 })
 
 -- skin changer
+local originalKnifeTextures = {}
+local function cacheOriginalKnifeTextures()
+    local viewmodels = workspace.Camera:FindFirstChild("Viewmodels")
+    if not viewmodels then return end
+    local goldenKnife = viewmodels:FindFirstChild("v_gg_goldenknife")
+    if not goldenKnife then return end
+
+    originalKnifeTextures = {} -- reset cache
+    for _, descendant in pairs(goldenKnife:GetDescendants()) do
+        if descendant:IsA("MeshPart") then
+            local sa = descendant:FindFirstChildOfClass("SurfaceAppearance")
+            originalKnifeTextures[descendant] = {
+                TextureID = descendant.TextureID,
+                Color = descendant.Color,
+                Material = descendant.Material,
+                SurfaceAppearance = sa and {
+                    ColorMap    = sa.ColorMap,
+                    NormalMap   = sa.NormalMap,
+                    RoughnessMap = sa.RoughnessMap,
+                    MetalnessMap = sa.MetalnessMap,
+                } or nil
+            }
+        end
+    end
+end
+
+local SOLID_KNIFE_ACTIVE = false
+
+local function applySolidKnife()
+    if not SOLID_KNIFE_ACTIVE then return end
+    local viewmodels = workspace.Camera:FindFirstChild("Viewmodels")
+    if not viewmodels then return end
+    local goldenKnife = viewmodels:FindFirstChild("v_gg_goldenknife")
+    if not goldenKnife then return end
+
+    for _, descendant in pairs(goldenKnife:GetDescendants()) do
+        if descendant:IsA("MeshPart") then
+            local sa = descendant:FindFirstChildOfClass("SurfaceAppearance")
+            if sa then sa:Destroy() end
+            if descendant.TextureID ~= "" then
+                descendant.TextureID = ""
+            end
+            descendant.Color = _G.SOLID_KNIFE_COLOR
+            descendant.Material = _G.SOLID_KNIFE_MATERIAL
+        end
+    end
+end
+
+local function restoreOriginalKnife()
+    local viewmodels = workspace.Camera:FindFirstChild("Viewmodels")
+    if not viewmodels then return end
+    local goldenKnife = viewmodels:FindFirstChild("v_gg_goldenknife")
+    if not goldenKnife then return end
+
+    for _, descendant in pairs(goldenKnife:GetDescendants()) do
+        if descendant:IsA("MeshPart") then
+            local data = originalKnifeTextures[descendant]
+            if data then
+                descendant.TextureID = data.TextureID
+                descendant.Color = data.Color
+                descendant.Material = data.Material
+
+                if data.SurfaceAppearance then
+                    local sa = Instance.new("SurfaceAppearance")
+                    sa.ColorMap     = data.SurfaceAppearance.ColorMap
+                    sa.NormalMap    = data.SurfaceAppearance.NormalMap
+                    sa.RoughnessMap = data.SurfaceAppearance.RoughnessMap
+                    sa.MetalnessMap = data.SurfaceAppearance.MetalnessMap
+                    sa.Parent = descendant
+                end
+            end
+        end
+    end
+end
+
+_G.SOLID_KNIFE_COLOR = Color3.fromRGB(255, 255, 255)
+_G.SOLID_KNIFE_MATERIAL = Enum.Material.Neon 
+
+task.spawn(function()
+    task.wait(10)
+    cacheOriginalKnifeTextures()
+end)
+
 local SkinTab = Window:CreateTab("Skinschanger", "palette")
 
 SkinTab:CreateToggle({
@@ -287,6 +400,17 @@ SkinTab:CreateToggle({
         applyReplacement()
     end
 })
+
+SkinTab:CreateToggle({
+    Name = "Golden Gun (replaces the revolver with the gg_goldengun)",
+    CurrentValue = false,
+    Flag = "GgunEnabled",
+    Callback = function(value)
+        GGUN = value
+        applyGunReplacement()
+    end
+})
+
 SkinTab:CreateSlider({
     Name = "Weapon Transparency",
     Range = {0, 1},
@@ -312,36 +436,19 @@ SkinTab:CreateSlider({
     end
 })
 
-_G.SOLID_KNIFE_COLOR = Color3.fromRGB(255, 255, 255)
-_G.SOLID_KNIFE_MATERIAL = Enum.Material.Neon 
-
-local function applySolidKnife()
-    local viewmodels = workspace.Camera:FindFirstChild("Viewmodels")
-    if not viewmodels then
-        warn("Viewmodels folder not found!")
-        return
-    end
-    
-    local goldenKnife = viewmodels:FindFirstChild("v_gg_goldenknife")
-    if not goldenKnife then
-        warn("v_gg_goldenknife not found!")
-        return
-    end
-    
-    for _, descendant in pairs(goldenKnife:GetDescendants()) do
-        if descendant:IsA("MeshPart") then
-            local surfaceAppearance = descendant:FindFirstChildOfClass("SurfaceAppearance")
-            if surfaceAppearance then
-                surfaceAppearance:Destroy()
-            end
-            if descendant.TextureID and descendant.TextureID ~= "" then
-                descendant.TextureID = ""
-            end
-            descendant.Color = _G.SOLID_KNIFE_COLOR
-            descendant.Material = _G.SOLID_KNIFE_MATERIAL
+SkinTab:CreateToggle({
+    Name = "Custom knife color/material",
+    CurrentValue = false,
+    Flag = "SolidKnifeToggle",
+    Callback = function(value)
+        SOLID_KNIFE_ACTIVE = value
+        if value then
+            applySolidKnife()
+        else
+            restoreOriginalKnife()
         end
     end
-end
+})
 
 SkinTab:CreateColorPicker({
     Name = "Knife Color",
@@ -349,7 +456,9 @@ SkinTab:CreateColorPicker({
     Flag = "SolidKnifeColor",
     Callback = function(color)
         _G.SOLID_KNIFE_COLOR = color
-        applySolidKnife()
+        if SOLID_KNIFE_ACTIVE then
+            applySolidKnife()
+        end
     end
 })
 
@@ -360,26 +469,23 @@ SkinTab:CreateDropdown({
     Flag = "SolidKnifeMaterial",
     Callback = function(option)
         local selectedOption = type(option) == "table" and option[1] or option
-        
         local materialMap = {
-            ["Plastic"] = Enum.Material.Plastic,
-            ["Neon"] = Enum.Material.Neon,
-            ["Metal"] = Enum.Material.Metal,
-            ["Foil"] = Enum.Material.Foil,
-            ["Force Field"] = Enum.Material.ForceField,
-            ["Diamond Plate"] = Enum.Material.DiamondPlate,
-            ["Marble"] = Enum.Material.Marble,
-            ["Rust"] = Enum.Material.CorrodedMetal,
-            ["Glass"] = Enum.Material.Glass,
+            ["Plastic"]      = Enum.Material.Plastic,
+            ["Neon"]         = Enum.Material.Neon,
+            ["Metal"]        = Enum.Material.Metal,
+            ["Foil"]         = Enum.Material.Foil,
+            ["Force Field"]  = Enum.Material.ForceField,
+            ["Diamond Plate"]= Enum.Material.DiamondPlate,
+            ["Marble"]       = Enum.Material.Marble,
+            ["Rust"]         = Enum.Material.CorrodedMetal,
+            ["Glass"]        = Enum.Material.Glass,
         }
         _G.SOLID_KNIFE_MATERIAL = materialMap[selectedOption] or Enum.Material.Neon
-        applySolidKnife()
+        if SOLID_KNIFE_ACTIVE then
+            applySolidKnife()
+        end
     end
 })
-task.spawn(function()
-    task.wait(1)
-    applySolidKnife()
-end)
 
 -- thanks tab
 local ThanksTab = Window:CreateTab("Special Thanks", "heart")
