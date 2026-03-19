@@ -407,7 +407,7 @@ ConfigTab:CreateButton({
 ConfigTab:CreateButton({
     Name = "Banjo's Config",
     Callback = function()
-        setclipboard("viewmodel_offset 0 0 0.75; crosshair_dot 1; crosshair_outline_alpha 255; crosshair_size 0; default_fov 90; crosshair_color 255 255 0; crosshair_alpha 0; viewmodel_arms 1; camera_aspect_ratio 1")
+        setclipboard("viewmodel_offset 0 -0.25 0.75; crosshair_dot 1; crosshair_outline_alpha 255; crosshair_size 0; default_fov 90; crosshair_color 255 255 0; crosshair_alpha 0; viewmodel_arms 1; camera_aspect_ratio 1")
     end
 })
 
