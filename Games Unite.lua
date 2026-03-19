@@ -403,6 +403,14 @@ ConfigTab:CreateButton({
         setclipboard("crosshair_alpha 0.15; crosshair_gap 6; crosshair_size 10; crosshair_thickness 2; crosshair_color 255 244 222; crosshair_t 0; crosshair_recoil_scale 1; crosshair_outline 1; crosshair_outline_thickness 1; crosshair_outline_color 0 0 0;  crosshair_outline_alpha 0.75; crosshair_dot 0; crosshair_dot_alpha 0; crosshair_dot_size 2; viewmodel_arms 1; viewmodel_offset 0 0 0; viewmodel_flip 0; default_fov 85; camera_aspect_ratio 1;")
     end
 })
+
+ConfigTab:CreateButton({
+    Name = "Banjo's Config",
+    Callback = function()
+        setclipboard("viewmodel_offset 0 0 0.75; crosshair_dot 1; crosshair_outline_alpha 255; crosshair_size 0; default_fov 90; crosshair_color 255 255 0; crosshair_alpha 0; viewmodel_arms 1; camera_aspect_ratio 1")
+    end
+})
+
 ConfigTab:CreateButton({
     Name = "The Bum",
     Callback = function()
